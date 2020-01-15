@@ -12,31 +12,11 @@ import Syntax
 import qualified Text.Parsec.Token as Tok
 import qualified Text.Parsec.Expr as Ex
 
-langDef :: Tok.LanguageDef ()
-langDef = emptyDef
-  { Tok.commentLine    = "--"
-  , Tok.nestedComments = False
-  , Tok.identStart     = letter
-  , Tok.identLetter    = alphaNum <|> oneOf "_'"
-  , Tok.caseSensitive  = True
-  }
+parseExpr :: String → Either ParseError Expr
+parseExpr = parse (contents expr) "<stdin>"
 
-lexer      = Tok.makeTokenParser langDef
-
-parens :: Parser a → Parser a
-parens     = Tok.parens lexer
-
-reserved :: String → Parser ()
-reserved = Tok.reserved lexer
-
-semisep :: Parser a → Parser [a]
-semisep = Tok.semiSep lexer
-
-reservedOp :: String → Parser ()
-reservedOp = Tok.reservedOp lexer
-
-prefixOp :: String → (a → a) → Ex.Operator String () Identity a
-prefixOp s f = Ex.Prefix $ reservedOp s >> return f
+contents :: Parser a → Parser a
+contents p = Tok.whiteSpace lexer *> p <* eof
 
 expr :: Parser Expr
 expr = Ex.buildExpressionParser opTable term
@@ -75,3 +55,31 @@ ifelse =
   <*> expr
   <*  reservedOp "else"
   <*> expr
+
+langDef :: Tok.LanguageDef ()
+langDef = emptyDef
+  { Tok.commentLine    = "--"
+  , Tok.nestedComments = False
+  , Tok.identStart     = letter
+  , Tok.identLetter    = alphaNum <|> oneOf "_'"
+  , Tok.caseSensitive  = True
+  }
+
+lexer :: Tok.TokenParser ()
+lexer = Tok.makeTokenParser langDef
+
+parens :: Parser a → Parser a
+parens     = Tok.parens lexer
+
+reserved :: String → Parser ()
+reserved = Tok.reserved lexer
+
+semisep :: Parser a → Parser [a]
+semisep = Tok.semiSep lexer
+
+reservedOp :: String → Parser ()
+reservedOp = Tok.reservedOp lexer
+
+prefixOp :: String → (a → a) → Ex.Operator String () Identity a
+prefixOp s f = Ex.Prefix $ reservedOp s >> return f
+
