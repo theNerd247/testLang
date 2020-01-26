@@ -3,17 +3,18 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Syntax 
-  ( Expr(..)
-  )
-where
+module Syntax where
+
+type Name = String
 
 data Expr =
-    Tr
-  | Fl
-  | Zero
-  | IsZero Expr
-  | Succ Expr
-  | Pred Expr
-  | If Expr Expr Expr
+    Var Name 
+  | App Expr Expr
+  | Lam Name Expr
+  | Lit Lit
+  deriving (Show, Eq)
+
+data Lit =
+    LInt Int
+  | LBool Bool
   deriving (Show, Eq)

@@ -16,53 +16,53 @@ parseExpr :: String → Either ParseError Expr
 parseExpr = parse (contents expr) "<stdin>"
 
 contents :: Parser a → Parser a
-contents p = Tok.whiteSpace lexer *> p <* eof
+contents p = whiteSpace *> p <* eof
 
 expr :: Parser Expr
-expr = Ex.buildExpressionParser opTable term
-
-opTable :: Ex.OperatorTable String () Identity Expr
-opTable = 
-  [ [ prefixOp "succ"   Succ
-    , prefixOp "pred"   Pred
-    , prefixOp "iszero" IsZero
-    ]
-  ]
+expr = foldr1 App <$> many1 term
 
 term :: Parser Expr
 term = 
-      true
-  <|> false
-  <|> zero
-  <|> ifelse
-  <|> parens expr 
+      lit
+  <|> var
+  <|> lam
+  <|> parens term
 
-true :: Parser Expr
-true = reserved "true" *> pure Tr
+var :: Parser Expr
+var = Var <$> ident
 
-false :: Parser Expr
-false = reserved "false" *> pure Fl
+lit :: Parser Expr
+lit = 
+      Lit <$> true  
+  <|> Lit <$> false
+  <|> Lit <$> int
 
-zero :: Parser Expr
-zero = reserved "0" *> pure Zero
+true :: Parser Lit
+true = reserved "True" *> (pure $ LBool True)
 
-ifelse :: Parser Expr
-ifelse = 
-      reserved "if" 
-  *>  (pure If)
-  <*> expr
-  <*  reservedOp "then"
-  <*> expr
-  <*  reservedOp "else"
-  <*> expr
+false :: Parser Lit
+false = reserved "False" *> (pure $ LBool False)
+
+int :: Parser Lit
+int = LInt <$> integer
+
+lam :: Parser Expr
+lam = 
+      reservedOp "\\"
+  *>  pure Lam 
+  <*> ident
+  <*  reservedOp "->" 
+  <*> term
 
 langDef :: Tok.LanguageDef ()
 langDef = emptyDef
-  { Tok.commentLine    = "--"
-  , Tok.nestedComments = False
-  , Tok.identStart     = letter
-  , Tok.identLetter    = alphaNum <|> oneOf "_'"
-  , Tok.caseSensitive  = True
+  { Tok.commentLine     = "--"
+  , Tok.nestedComments  = False
+  , Tok.identStart      = letter
+  , Tok.identLetter     = alphaNum <|> oneOf "_'"
+  , Tok.caseSensitive   = True
+  , Tok.reservedOpNames = [ "\\" , "->" ]
+  , Tok.reservedNames   = [ "True" , "False" ]
   }
 
 lexer :: Tok.TokenParser ()
@@ -70,6 +70,12 @@ lexer = Tok.makeTokenParser langDef
 
 parens :: Parser a → Parser a
 parens     = Tok.parens lexer
+
+ident :: Parser Name
+ident = Tok.identifier lexer
+
+integer :: Parser Int
+integer = fromInteger <$> (Tok.integer lexer)
 
 reserved :: String → Parser ()
 reserved = Tok.reserved lexer
@@ -83,3 +89,5 @@ reservedOp = Tok.reservedOp lexer
 prefixOp :: String → (a → a) → Ex.Operator String () Identity a
 prefixOp s f = Ex.Prefix $ reservedOp s >> return f
 
+whiteSpace :: Parser ()
+whiteSpace = Tok.whiteSpace lexer
