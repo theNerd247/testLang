@@ -9,11 +9,12 @@ import Text.Parsec
 import Text.Parsec.String (Parser)
 import Text.Parsec.Language (haskellStyle, emptyDef)
 import Syntax
+import Data.Bifunctor (first)
 import qualified Text.Parsec.Token as Tok
 import qualified Text.Parsec.Expr as Ex
 
-parseExpr :: String → Either ParseError Expr
-parseExpr = parse (contents expr) "<stdin>"
+parseExpr :: String → Either String Expr
+parseExpr = first show . parse (contents expr) "<stdin>"
 
 contents :: Parser a → Parser a
 contents p = whiteSpace *> p <* eof

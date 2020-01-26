@@ -1,5 +1,5 @@
-{ mkDerivation, base, comonad, free, parsec, pretty
-, recursion-schemes, stdenv, text
+{ mkDerivation, base, comonad, containers, free, haskeline, parsec
+, pretty, recursion-schemes, stdenv, text
 }:
 mkDerivation {
   pname = "testLang";
@@ -8,7 +8,8 @@ mkDerivation {
   isLibrary = false;
   isExecutable = true;
   executableHaskellDepends = [
-    base comonad free parsec pretty recursion-schemes text
+    base comonad containers free haskeline parsec pretty
+    recursion-schemes text
   ];
   license = "unknown";
   hydraPlatforms = stdenv.lib.platforms.none;
