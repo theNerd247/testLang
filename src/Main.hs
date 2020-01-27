@@ -13,4 +13,4 @@ process line = either print print $ do
 main :: IO ()
 main = runInputT defaultSettings loop
   where
-    loop = getInputLine "Happy>" >>= maybe (outputStrLn "Goodbye.") (liftIO . process >=> (const loop))
+    loop = getInputLine "Happy> " >>= maybe (outputStrLn "Goodbye.") (liftIO . process >=> (const loop))
