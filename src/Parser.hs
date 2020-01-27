@@ -27,6 +27,7 @@ term =
       lit
   <|> var
   <|> lam
+  <|> letExpr
   <|> parens term
 
 var :: Parser Expr
@@ -47,6 +48,17 @@ false = reserved "False" *> (pure $ LBool False)
 int :: Parser Lit
 int = LInt <$> integer
 
+letExpr :: Parser Expr
+letExpr = do
+  reserved "let" 
+  n <- ident
+  reserved "="
+  e <- term
+  reserved "in"
+  t <- term
+  return $ App (Lam n t) e
+
+
 lam :: Parser Expr
 lam = 
       reservedOp "\\"
@@ -63,7 +75,7 @@ langDef = emptyDef
   , Tok.identLetter     = alphaNum <|> oneOf "_'"
   , Tok.caseSensitive   = True
   , Tok.reservedOpNames = [ "\\" , "->" ]
-  , Tok.reservedNames   = [ "True" , "False" ]
+  , Tok.reservedNames   = [ "True" , "False", "let", "in", "=" ]
   }
 
 lexer :: Tok.TokenParser ()
