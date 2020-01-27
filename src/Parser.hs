@@ -20,7 +20,7 @@ contents :: Parser a → Parser a
 contents p = whiteSpace *> p <* eof
 
 expr :: Parser Expr
-expr = foldr1 App <$> many1 term
+expr = foldr1 App <$> (many1 term)
 
 term :: Parser Expr
 term = 
@@ -28,7 +28,7 @@ term =
   <|> var
   <|> lam
   <|> letExpr
-  <|> parens term
+  <|> parens expr
 
 var :: Parser Expr
 var = Var <$> ident
@@ -53,9 +53,9 @@ letExpr = do
   reserved "let" 
   n <- ident
   reserved "="
-  e <- term
+  e <- expr
   reserved "in"
-  t <- term
+  t <- expr
   return $ App (Lam n t) e
 
 
@@ -65,7 +65,7 @@ lam =
   *>  pure Lam 
   <*> ident
   <*  reservedOp "->" 
-  <*> term
+  <*> expr
 
 langDef :: Tok.LanguageDef ()
 langDef = emptyDef
